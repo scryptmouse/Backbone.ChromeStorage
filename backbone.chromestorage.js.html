@@ -1,0 +1,328 @@
+<!DOCTYPE html><html><head><title>backbone.chromestorage.js</title><meta http-equiv="Content-Type" content="text/html" charset="UTF-8"><link rel="stylesheet" media="all" href="./docco.css"></head><body><div id="container"><div id="background"></div><div id="jump_to">Jump To &hellip;<div id="jump_wrapper"><div id="jump_page"><a href="./index.html" class="source"><span class="file_name">README</span></a><a href="./backbone.chromestorage.js.html" class="source selected"><span class="base_path">. / </span><span class="file_name">backbone.chromestorage.js</span></a></div></div></div><table cellpadding="0" cellspacing="0"><thead><tr><th class="docs"><h1>backbone.chromestorage.js</h1><div class="filepath">./</div></th><th class="code"></th></tr></thead><tbody><tr id="section-1"><td class="docs"><div class="pilwrap"><a href="#section-1" class="pilcrow">&#182;</a></div>
+</td><td class="code"><div class="highlight"><pre><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">factory</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">define</span> <span class="o">===</span> <span class="s1">&#39;function&#39;</span> <span class="o">&amp;&amp;</span> <span class="nx">define</span><span class="p">.</span><span class="nx">amd</span><span class="p">)</span>
+    <span class="nx">define</span><span class="p">([</span><span class="s1">&#39;jquery&#39;</span><span class="p">,</span> <span class="s1">&#39;underscore&#39;</span><span class="p">,</span> <span class="s1">&#39;backbone&#39;</span><span class="p">],</span> <span class="nx">factory</span><span class="p">);</span>
+  <span class="k">else</span>
+    <span class="nx">factory</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">$</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">_</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">Backbone</span><span class="p">);</span>
+<span class="p">}(</span><span class="kd">function</span><span class="p">(</span><span class="nx">$</span><span class="p">,</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">Backbone</span><span class="p">)</span> <span class="p">{</span>
+  <span class="s1">&#39;use strict&#39;</span><span class="p">;</span></pre></div></td></tr><tr id="section-2"><td class="docs"><div class="pilwrap"><a href="#section-2" class="pilcrow">&#182;</a></div><h1>ChromeStorage.Wrapper</h1>
+</td><td class="code"><div class="highlight"><pre></pre></div></td></tr><tr id="section-3"><td class="docs"><div class="pilwrap"><a href="#section-3" class="pilcrow">&#182;</a></div><p>A wrapper around the <code>chrome.storage.*</code> API that uses
+<code>$.Deferred</code> objects for greater flexibility.</p>
+</td><td class="code"><div class="highlight"><pre>  <span class="kd">function</span> <span class="nx">Wrapper</span><span class="p">(</span><span class="nx">type</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">type</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">+</span><span class="nx">type</span> <span class="o">||</span> <span class="s1">&#39;local&#39;</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">chrome</span><span class="p">.</span><span class="nx">storage</span><span class="p">[</span><span class="nx">type</span><span class="p">])</span> <span class="p">{</span>
+      <span class="nx">console</span><span class="p">.</span><span class="nx">warn</span><span class="p">(</span><span class="s1">&#39;Unknown type %s, defaulting to local&#39;</span><span class="p">,</span> <span class="nx">type</span><span class="p">);</span>
+      <span class="nx">type</span> <span class="o">=</span> <span class="s1">&#39;local&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="nx">type</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">storage</span> <span class="o">=</span> <span class="nx">chrome</span><span class="p">.</span><span class="nx">storage</span><span class="p">[</span><span class="k">this</span><span class="p">.</span><span class="nx">type</span><span class="p">];</span>
+  <span class="p">}</span></pre></div></td></tr><tr id="section-4"><td class="docs"><div class="pilwrap"><a href="#section-4" class="pilcrow">&#182;</a></div><h2>_csResponse</h2>
+
+<p>Private helper function that's used to return a callback to
+wrapped <code>chrome.storage.*</code> methods.</p>
+
+<p>It will <strong>resolve</strong> the provided <code>$.Deferred</code> object
+with the response, or <strong>reject</strong> it if there was an
+error.</p>
+</td><td class="code"><div class="highlight"><pre>  <span class="kd">function</span> <span class="nx">_csResponse</span><span class="p">(</span><span class="nx">dfd</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">err</span> <span class="o">=</span> <span class="nx">chrome</span><span class="p">.</span><span class="nx">runtime</span><span class="p">.</span><span class="nx">lastError</span><span class="p">;</span>
+      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">err</span><span class="p">)</span>
+        <span class="nx">dfd</span><span class="p">.</span><span class="nx">resolve</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">dfd</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
+      <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">warn</span><span class="p">(</span><span class="s2">&quot;chromeStorage error: &#39;%s&#39;&quot;</span><span class="p">,</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
+        <span class="nx">dfd</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">dfd</span><span class="p">,</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span><span class="p">,</span> <span class="nx">err</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">};</span>
+  <span class="p">}</span></pre></div></td></tr><tr id="section-5"><td class="docs"><div class="pilwrap"><a href="#section-5" class="pilcrow">&#182;</a></div><h2>chrome.storage.* API</h2>
+
+<p>Private factory functions for wrapping API methods</p>
+</td><td class="code"><div class="highlight"><pre></pre></div></td></tr><tr id="section-6"><td class="docs"><div class="pilwrap"><a href="#section-6" class="pilcrow">&#182;</a></div><h3>wrapMethod</h3>
+
+<p>For wrapping <strong>clear</strong> and <strong>getBytesInUse</strong></p>
+</td><td class="code"><div class="highlight"><pre>  <span class="kd">function</span> <span class="nx">wrapMethod</span><span class="p">(</span><span class="nx">method</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="kd">function</span><span class="p">(</span><span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">dfd</span> <span class="o">=</span> <span class="nx">$</span><span class="p">.</span><span class="nx">Deferred</span><span class="p">();</span>
+
+      <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">cb</span> <span class="o">===</span> <span class="s1">&#39;function&#39;</span><span class="p">)</span>
+        <span class="nx">dfd</span><span class="p">.</span><span class="nx">done</span><span class="p">(</span><span class="nx">cb</span><span class="p">);</span>
+
+      <span class="k">this</span><span class="p">.</span><span class="nx">storage</span><span class="p">[</span><span class="nx">method</span><span class="p">](</span><span class="nx">_csResponse</span><span class="p">(</span><span class="nx">dfd</span><span class="p">));</span>
+
+      <span class="k">return</span> <span class="nx">dfd</span><span class="p">.</span><span class="nx">promise</span><span class="p">();</span>
+    <span class="p">};</span>
+  <span class="p">}</span></pre></div></td></tr><tr id="section-7"><td class="docs"><div class="pilwrap"><a href="#section-7" class="pilcrow">&#182;</a></div><h3>wrapAccessor</h3>
+
+<p>For wrapping <strong>get</strong>, <strong>set</strong>, and <strong>remove</strong>.</p>
+</td><td class="code"><div class="highlight"><pre>  <span class="kd">function</span> <span class="nx">wrapAccessor</span><span class="p">(</span><span class="nx">method</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="kd">function</span><span class="p">(</span><span class="nx">items</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">dfd</span> <span class="o">=</span> <span class="nx">$</span><span class="p">.</span><span class="nx">Deferred</span><span class="p">();</span>
+
+      <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">cb</span> <span class="o">===</span> <span class="s1">&#39;function&#39;</span><span class="p">)</span>
+        <span class="nx">dfd</span><span class="p">.</span><span class="nx">done</span><span class="p">(</span><span class="nx">cb</span><span class="p">);</span>
+
+      <span class="k">this</span><span class="p">.</span><span class="nx">storage</span><span class="p">[</span><span class="nx">method</span><span class="p">](</span><span class="nx">items</span><span class="p">,</span> <span class="nx">_csResponse</span><span class="p">(</span><span class="nx">dfd</span><span class="p">));</span>
+
+      <span class="k">return</span> <span class="nx">dfd</span><span class="p">.</span><span class="nx">promise</span><span class="p">();</span>
+    <span class="p">};</span>
+  <span class="p">}</span></pre></div></td></tr><tr id="section-8"><td class="docs"><div class="pilwrap"><a href="#section-8" class="pilcrow">&#182;</a></div><p>The <code>Wrapper</code> prototype has the same methods as the <code>chrome.storage.*</code> API,
+accepting the same parameters, except that they return <code>$.Deferred</code> promise
+and the callback is always optional. If one is provided, it will be added as a
+<strong>done</strong> callback.</p>
+</td><td class="code"><div class="highlight"><pre>  <span class="nx">_</span><span class="p">(</span><span class="nx">Wrapper</span><span class="p">.</span><span class="nx">prototype</span><span class="p">).</span><span class="nx">extend</span><span class="p">({</span>
+    <span class="nx">getBytesInUse</span><span class="o">:</span> <span class="nx">wrapMethod</span><span class="p">(</span><span class="s1">&#39;getBytesInUse&#39;</span><span class="p">),</span>
+
+    <span class="nx">clear</span><span class="o">:</span> <span class="nx">wrapMethod</span><span class="p">(</span><span class="s1">&#39;clear&#39;</span><span class="p">),</span>
+
+    <span class="nx">get</span><span class="o">:</span> <span class="nx">wrapAccessor</span><span class="p">(</span><span class="s1">&#39;get&#39;</span><span class="p">),</span>
+
+    <span class="nx">set</span><span class="o">:</span> <span class="nx">wrapAccessor</span><span class="p">(</span><span class="s1">&#39;set&#39;</span><span class="p">),</span>
+
+    <span class="nx">remove</span><span class="o">:</span> <span class="nx">wrapAccessor</span><span class="p">(</span><span class="s1">&#39;remove&#39;</span><span class="p">),</span></pre></div></td></tr><tr id="section-9"><td class="docs"><div class="pilwrap"><a href="#section-9" class="pilcrow">&#182;</a></div><p>Pick out the relevant properties from the storage API.</p>
+</td><td class="code"><div class="highlight"><pre>    <span class="nx">getQuotaObject</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">_</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">storage</span><span class="p">).</span><span class="nx">pick</span><span class="p">(</span>
+        <span class="s1">&#39;QUOTA_BYTES&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;QUOTA_BYTES_PER_ITEM&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;MAX_ITEMS&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;MAX_SUSTAINED_WRITE_OPERATIONS_PER_MINUTE&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;MAX_WRITE_OPERATIONS_PER_HOUR&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">});</span></pre></div></td></tr><tr id="section-10"><td class="docs"><div class="pilwrap"><a href="#section-10" class="pilcrow">&#182;</a></div><h1>Backbone.ChromeStorage</h1>
+</td><td class="code"><div class="highlight"><pre></pre></div></td></tr><tr id="section-11"><td class="docs"><div class="pilwrap"><a href="#section-11" class="pilcrow">&#182;</a></div><p>Public API is essentially the same as Backbone.localStorage.</p>
+</td><td class="code"><div class="highlight"><pre>  <span class="kd">function</span> <span class="nx">ChromeStorage</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">type</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">_</span><span class="p">.</span><span class="nx">bindAll</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">name</span> <span class="o">=</span> <span class="nx">name</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="nx">type</span> <span class="o">||</span> <span class="nx">ChromeStorage</span><span class="p">.</span><span class="nx">defaultType</span> <span class="o">||</span> <span class="s1">&#39;local&#39;</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">store</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Wrapper</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">type</span><span class="p">);</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">loaded</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">store</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">name</span><span class="p">).</span>
+      <span class="nx">pipe</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_parseRecords</span><span class="p">).</span>
+      <span class="nx">done</span><span class="p">((</span><span class="kd">function</span><span class="p">(</span><span class="nx">records</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">records</span> <span class="o">=</span> <span class="nx">records</span><span class="p">;</span>
+      <span class="p">}).</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
+  <span class="p">}</span></pre></div></td></tr><tr id="section-12"><td class="docs"><div class="pilwrap"><a href="#section-12" class="pilcrow">&#182;</a></div><p><code>Backbone.ChromeStorage.defaultType</code> can be overridden globally if desired.</p>
+
+<p>The current options are <code>'local'</code> or <code>'sync'</code>.</p>
+</td><td class="code"><div class="highlight"><pre>  <span class="nx">ChromeStorage</span><span class="p">.</span><span class="nx">defaultType</span> <span class="o">=</span> <span class="s1">&#39;local&#39;</span><span class="p">;</span></pre></div></td></tr><tr id="section-13"><td class="docs"><div class="pilwrap"><a href="#section-13" class="pilcrow">&#182;</a></div><h3>wantsJSON</h3>
+</td><td class="code"><div class="highlight"><pre></pre></div></td></tr><tr id="section-14"><td class="docs"><div class="pilwrap"><a href="#section-14" class="pilcrow">&#182;</a></div><p>Private helper function for use with a <code>$.Deferred</code>'s <strong>pipe</strong>.</p>
+
+<p>It mimics the effect of returning a JSON representation of the
+provided model from a server, in order to satisfy Backbone.sync
+methods that expect that.</p>
+</td><td class="code"><div class="highlight"><pre>  <span class="kd">function</span> <span class="nx">wantsJSON</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">model</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">();</span>
+    <span class="p">};</span>
+  <span class="p">}</span></pre></div></td></tr><tr id="section-15"><td class="docs"><div class="pilwrap"><a href="#section-15" class="pilcrow">&#182;</a></div><h3>_S4</h3>
+
+<p>Generate a random four-digit hex string for <strong>_guid</strong>.</p>
+</td><td class="code"><div class="highlight"><pre>  <span class="kd">function</span> <span class="nx">_S4</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(((</span><span class="mi">1</span><span class="o">+</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">())</span><span class="o">*</span><span class="mh">0x10000</span><span class="p">)</span><span class="o">|</span><span class="mi">0</span><span class="p">).</span><span class="nx">toString</span><span class="p">(</span><span class="mi">16</span><span class="p">).</span><span class="nx">substring</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+  <span class="p">}</span></pre></div></td></tr><tr id="section-16"><td class="docs"><div class="pilwrap"><a href="#section-16" class="pilcrow">&#182;</a></div><h3>_guid</h3>
+
+<p>Pseudo-GUID generator</p>
+</td><td class="code"><div class="highlight"><pre>  <span class="kd">function</span> <span class="nx">_guid</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span><span class="nx">_S4</span><span class="p">()</span><span class="o">+</span><span class="nx">_S4</span><span class="p">()</span><span class="o">+</span><span class="s2">&quot;-&quot;</span><span class="o">+</span><span class="nx">_S4</span><span class="p">()</span><span class="o">+</span><span class="s2">&quot;-&quot;</span><span class="o">+</span><span class="nx">_S4</span><span class="p">()</span><span class="o">+</span><span class="s2">&quot;-&quot;</span><span class="o">+</span><span class="nx">_S4</span><span class="p">()</span><span class="o">+</span><span class="s2">&quot;-&quot;</span><span class="o">+</span><span class="nx">_S4</span><span class="p">()</span><span class="o">+</span><span class="nx">_S4</span><span class="p">()</span><span class="o">+</span><span class="nx">_S4</span><span class="p">());</span>
+  <span class="p">}</span>
+
+  <span class="nx">_</span><span class="p">(</span><span class="nx">ChromeStorage</span><span class="p">.</span><span class="nx">prototype</span><span class="p">).</span><span class="nx">extend</span><span class="p">({</span></pre></div></td></tr><tr id="section-17"><td class="docs"><div class="pilwrap"><a href="#section-17" class="pilcrow">&#182;</a></div><h2>CRUD methods</h2>
+
+<h3>create</h3>
+</td><td class="code"><div class="highlight"><pre>    <span class="nx">create</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">model</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">model</span><span class="p">.</span><span class="nx">id</span> <span class="o">=</span> <span class="nx">_guid</span><span class="p">();</span>
+        <span class="nx">model</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">idAttribute</span><span class="p">,</span> <span class="nx">model</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+      <span class="p">}</span>
+
+      <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">store</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_wrap</span><span class="p">(</span><span class="nx">model</span><span class="p">),</span> <span class="k">this</span><span class="p">.</span><span class="nx">_created</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">model</span><span class="p">)).</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">wantsJSON</span><span class="p">(</span><span class="nx">model</span><span class="p">));</span>
+    <span class="p">},</span>
+
+    <span class="nx">_created</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">records</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">+</span><span class="nx">model</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">save</span><span class="p">();</span>
+    <span class="p">},</span></pre></div></td></tr><tr id="section-18"><td class="docs"><div class="pilwrap"><a href="#section-18" class="pilcrow">&#182;</a></div><h3>update</h3>
+</td><td class="code"><div class="highlight"><pre>    <span class="nx">update</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">store</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_wrap</span><span class="p">(</span><span class="nx">model</span><span class="p">),</span> <span class="k">this</span><span class="p">.</span><span class="nx">_updated</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">model</span><span class="p">)).</span><span class="nx">pipe</span><span class="p">(</span><span class="nx">wantsJSON</span><span class="p">(</span><span class="nx">model</span><span class="p">));</span>
+    <span class="p">},</span>
+
+    <span class="nx">_updated</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">+</span><span class="nx">model</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
+
+      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">records</span><span class="p">).</span><span class="nx">include</span><span class="p">(</span><span class="nx">id</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">records</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">id</span><span class="p">);</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">save</span><span class="p">();</span>
+      <span class="p">}</span>
+    <span class="p">},</span></pre></div></td></tr><tr id="section-19"><td class="docs"><div class="pilwrap"><a href="#section-19" class="pilcrow">&#182;</a></div><h3>find</h3>
+</td><td class="code"><div class="highlight"><pre>    <span class="nx">find</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">store</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_wrap</span><span class="p">(</span><span class="nx">model</span><span class="p">)).</span><span class="nx">pipe</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_found</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">_found</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">model</span><span class="p">);</span>
+    <span class="p">},</span></pre></div></td></tr><tr id="section-20"><td class="docs"><div class="pilwrap"><a href="#section-20" class="pilcrow">&#182;</a></div><h3>findAll</h3>
+</td><td class="code"><div class="highlight"><pre>    <span class="nx">findAll</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">modelsDfd</span> <span class="o">=</span> <span class="nx">$</span><span class="p">.</span><span class="nx">Deferred</span><span class="p">()</span></pre></div></td></tr><tr id="section-21"><td class="docs"><div class="pilwrap"><a href="#section-21" class="pilcrow">&#182;</a></div><div class="dox"><div class="summary"><p>Bind the callback to use once the models are fetched.</p></div><div class="body"></div></div>
+</td><td class="code"><div class="highlight"><pre>        <span class="p">,</span> <span class="nx">resolveModels</span> <span class="o">=</span> <span class="nx">modelsDfd</span><span class="p">.</span><span class="nx">resolve</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">modelsDfd</span><span class="p">)</span>
+      <span class="p">;</span></pre></div></td></tr><tr id="section-22"><td class="docs"><div class="pilwrap"><a href="#section-22" class="pilcrow">&#182;</a></div><p>Waits until the model IDs have been initially
+populated, and then queries the storage for
+the actual records.</p>
+</td><td class="code"><div class="highlight"><pre>      <span class="nx">$</span><span class="p">.</span><span class="nx">when</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">loaded</span><span class="p">).</span><span class="nx">done</span><span class="p">((</span><span class="kd">function</span><span class="p">(</span><span class="nx">records</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">model_ids</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">_getRecordIds</span><span class="p">();</span>
+
+        <span class="k">this</span><span class="p">.</span><span class="nx">store</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="nx">model_ids</span><span class="p">,</span> <span class="nx">resolveModels</span><span class="p">);</span>
+      <span class="p">}).</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
+
+      <span class="k">return</span> <span class="nx">modelsDfd</span><span class="p">.</span><span class="nx">pipe</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_foundAll</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">_foundAll</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">models</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">_</span><span class="p">(</span><span class="nx">models</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">);</span>
+    <span class="p">},</span></pre></div></td></tr><tr id="section-23"><td class="docs"><div class="pilwrap"><a href="#section-23" class="pilcrow">&#182;</a></div><h3>destroy</h3>
+</td><td class="code"><div class="highlight"><pre>    <span class="nx">destroy</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">store</span><span class="p">.</span>
+        <span class="nx">remove</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_idOf</span><span class="p">(</span><span class="nx">model</span><span class="p">),</span> <span class="k">this</span><span class="p">.</span><span class="nx">_destroyed</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">model</span><span class="p">)).</span>
+        <span class="nx">pipe</span><span class="p">(</span><span class="nx">wantsJSON</span><span class="p">(</span><span class="nx">model</span><span class="p">));</span>
+    <span class="p">},</span>
+
+    <span class="nx">_destroyed</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">records</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">without</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">records</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">_idOf</span><span class="p">(</span><span class="nx">model</span><span class="p">));</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">save</span><span class="p">();</span>
+    <span class="p">},</span></pre></div></td></tr><tr id="section-24"><td class="docs"><div class="pilwrap"><a href="#section-24" class="pilcrow">&#182;</a></div><h2>Utility methods</h2>
+
+<h3>quota</h3>
+
+<p>This is mostly relevant in <code>sync</code> contexts,
+given the rate-limited write operations.</p>
+
+<p>For <code>local</code> contexts, it will just return an object with
+the <code>QUOTA_BYTES</code> property.</p>
+
+<p>In <code>sync</code> contexts, it will return the above as well as:</p>
+
+<ul>
+<li><code>QUOTA_BYTES_PER_ITEM</code></li>
+<li><code>MAX_ITEMS</code></li>
+<li><code>MAX_SUSTAINED_WRITE_OPERATIONS_PER_MINUTE</code></li>
+<li><code>MAX_WRITE_OPERATIONS_PER_HOUR</code></li>
+</ul>
+
+<p>It also queries the API with <code>getBytesInUse</code>, adding that
+to the resultant object under the property name <code>QUOTA_BYTES_IN_USE</code>.</p>
+</td><td class="code"><div class="highlight"><pre>    <span class="nx">quota</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">q</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">store</span><span class="p">.</span><span class="nx">getQuotaObject</span><span class="p">();</span>
+
+      <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">store</span><span class="p">.</span><span class="nx">getBytesInUse</span><span class="p">().</span><span class="nx">pipe</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">bytes</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">_</span><span class="p">(</span><span class="nx">q</span><span class="p">).</span><span class="nx">extend</span><span class="p">({</span>
+          <span class="nx">QUOTA_BYTES_IN_USE</span><span class="o">:</span> <span class="nx">bytes</span>
+        <span class="p">});</span>
+      <span class="p">});</span>
+    <span class="p">},</span></pre></div></td></tr><tr id="section-25"><td class="docs"><div class="pilwrap"><a href="#section-25" class="pilcrow">&#182;</a></div><h3>save</h3>
+
+<p>Save the current list of model ids into
+a stringified array with the collection
+name as key.</p>
+</td><td class="code"><div class="highlight"><pre>    <span class="nx">save</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">o</span> <span class="o">=</span> <span class="p">{};</span>
+
+      <span class="nx">o</span><span class="p">[</span><span class="k">this</span><span class="p">.</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">records</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">);</span>
+
+      <span class="k">this</span><span class="p">.</span><span class="nx">store</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="nx">o</span><span class="p">);</span>
+    <span class="p">},</span></pre></div></td></tr><tr id="section-26"><td class="docs"><div class="pilwrap"><a href="#section-26" class="pilcrow">&#182;</a></div><h3>_getRecordIds</h3>
+
+<p>Get an array of all model IDs to fetch from storage,
+prefixed with the collection name</p>
+</td><td class="code"><div class="highlight"><pre>    <span class="nx">_getRecordIds</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">records</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_idOf</span><span class="p">);</span>
+    <span class="p">},</span></pre></div></td></tr><tr id="section-27"><td class="docs"><div class="pilwrap"><a href="#section-27" class="pilcrow">&#182;</a></div><h3>_idOf</h3>
+
+<p>Get the key that the item will be stored as:
+the collection name followed by the model's id.</p>
+
+<p>Accepts a model instance or the id directly.</p>
+</td><td class="code"><div class="highlight"><pre>    <span class="nx">_idOf</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">name</span><span class="o">+</span><span class="s1">&#39;-&#39;</span><span class="o">+</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="o">?</span> <span class="nx">model</span> <span class="o">:</span> <span class="nx">model</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+    <span class="p">},</span></pre></div></td></tr><tr id="section-28"><td class="docs"><div class="pilwrap"><a href="#section-28" class="pilcrow">&#182;</a></div><h3>_wrap</h3>
+
+<p>Stringify a model instance into an object that
+the storage API wants.</p>
+</td><td class="code"><div class="highlight"><pre>    <span class="nx">_wrap</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">o</span> <span class="o">=</span> <span class="p">{};</span>
+
+      <span class="nx">o</span><span class="p">[</span><span class="k">this</span><span class="p">.</span><span class="nx">_idOf</span><span class="p">(</span><span class="nx">model</span><span class="p">)]</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">model</span><span class="p">);</span>
+
+      <span class="k">return</span> <span class="nx">o</span><span class="p">;</span>
+    <span class="p">},</span></pre></div></td></tr><tr id="section-29"><td class="docs"><div class="pilwrap"><a href="#section-29" class="pilcrow">&#182;</a></div><h3>_parseRecords</h3>
+
+<p>Takes the object returned from <code>chrome.storage</code> with the
+collection name as a property name, and a stringified array
+of model ids as the property's value. It <strong>split</strong>s the string and
+returns the result.</p>
+</td><td class="code"><div class="highlight"><pre>    <span class="nx">_parseRecords</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">records</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">records</span> <span class="o">&amp;&amp;</span> <span class="nx">records</span><span class="p">[</span><span class="k">this</span><span class="p">.</span><span class="nx">name</span><span class="p">]</span> <span class="o">&amp;&amp;</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">records</span><span class="p">[</span><span class="k">this</span><span class="p">.</span><span class="nx">name</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="nx">records</span><span class="p">[</span><span class="k">this</span><span class="p">.</span><span class="nx">name</span><span class="p">].</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">);</span>
+      <span class="k">else</span>
+        <span class="k">return</span> <span class="p">[];</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+
+  <span class="nx">Backbone</span><span class="p">.</span><span class="nx">ChromeStorage</span> <span class="o">=</span> <span class="nx">ChromeStorage</span><span class="p">;</span>
+  <span class="nx">Backbone</span><span class="p">.</span><span class="nx">ChromeStorage</span><span class="p">.</span><span class="nx">Wrapper</span> <span class="o">=</span> <span class="nx">Wrapper</span><span class="p">;</span></pre></div></td></tr><tr id="section-30"><td class="docs"><div class="pilwrap"><a href="#section-30" class="pilcrow">&#182;</a></div><h2>Backbone.chromeSync</h2>
+</td><td class="code"><div class="highlight"><pre></pre></div></td></tr><tr id="section-31"><td class="docs"><div class="pilwrap"><a href="#section-31" class="pilcrow">&#182;</a></div><p>Largely the same implementation as in Backbone.localSync, except that
+<code>$.Deferred</code> objects are requisite.</p>
+</td><td class="code"><div class="highlight"><pre>  <span class="nx">Backbone</span><span class="p">.</span><span class="nx">ChromeStorage</span><span class="p">.</span><span class="nx">sync</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">chromeSync</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">method</span><span class="p">,</span> <span class="nx">model</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">store</span> <span class="o">=</span> <span class="nx">model</span><span class="p">.</span><span class="nx">chromeStorage</span> <span class="o">||</span> <span class="nx">model</span><span class="p">.</span><span class="nx">collection</span><span class="p">.</span><span class="nx">chromeStorage</span>
+      <span class="p">,</span> <span class="nx">resp</span>
+      <span class="p">,</span> <span class="nx">isFn</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isFunction</span>
+    <span class="p">;</span>
+
+    <span class="k">switch</span><span class="p">(</span><span class="nx">method</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">case</span> <span class="s2">&quot;read&quot;</span><span class="o">:</span>
+        <span class="nx">resp</span> <span class="o">=</span> <span class="nx">model</span><span class="p">.</span><span class="nx">id</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">?</span> <span class="nx">store</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="o">:</span> <span class="nx">store</span><span class="p">.</span><span class="nx">findAll</span><span class="p">();</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="s2">&quot;create&quot;</span><span class="o">:</span>
+        <span class="nx">resp</span> <span class="o">=</span> <span class="nx">store</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="nx">model</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="s2">&quot;update&quot;</span><span class="o">:</span>
+        <span class="nx">resp</span> <span class="o">=</span> <span class="nx">store</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">model</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="s2">&quot;delete&quot;</span><span class="o">:</span>
+        <span class="nx">resp</span> <span class="o">=</span> <span class="nx">store</span><span class="p">.</span><span class="nx">destroy</span><span class="p">(</span><span class="nx">model</span><span class="p">);</span>
+        <span class="k">break</span><span class="p">;</span>
+      <span class="k">default</span><span class="o">:</span>
+        <span class="kd">var</span> <span class="nx">err</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Unknown Method: &quot;&#39;</span><span class="o">+</span><span class="nx">method</span><span class="o">+</span><span class="s1">&#39;&quot;&#39;</span><span class="p">);</span>
+        <span class="nx">resp</span> <span class="o">=</span> <span class="nx">$</span><span class="p">.</span><span class="nx">Deferred</span><span class="p">();</span>
+        <span class="nx">resp</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">resp</span><span class="p">,</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span><span class="p">,</span> <span class="nx">err</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">isFn</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">success</span><span class="p">))</span>
+      <span class="nx">resp</span><span class="p">.</span><span class="nx">done</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">success</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">isFn</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">error</span><span class="p">))</span>
+      <span class="nx">resp</span><span class="p">.</span><span class="nx">fail</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">error</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">isFn</span><span class="p">(</span><span class="nx">error</span><span class="p">))</span>
+      <span class="nx">resp</span><span class="p">.</span><span class="nx">fail</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">error</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="nx">resp</span> <span class="o">&amp;&amp;</span> <span class="nx">resp</span><span class="p">.</span><span class="nx">promise</span><span class="p">();</span>
+  <span class="p">};</span>
+
+  <span class="nx">Backbone</span><span class="p">.</span><span class="nx">ajaxSync</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">sync</span><span class="p">;</span>
+
+  <span class="nx">Backbone</span><span class="p">.</span><span class="nx">getSyncMethod</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">chromeStorage</span> <span class="o">||</span> <span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">collection</span> <span class="o">&amp;&amp;</span> <span class="nx">model</span><span class="p">.</span><span class="nx">collection</span><span class="p">.</span><span class="nx">chromeStorage</span><span class="p">))</span>
+      <span class="k">return</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">ChromeStorage</span><span class="p">.</span><span class="nx">sync</span><span class="p">;</span>
+    <span class="k">else</span>
+      <span class="k">return</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">ajaxSync</span><span class="p">;</span>
+  <span class="p">};</span>
+
+  <span class="nx">Backbone</span><span class="p">.</span><span class="nx">sync</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">method</span><span class="p">,</span> <span class="nx">model</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">getSyncMethod</span><span class="p">(</span><span class="nx">model</span><span class="p">).</span><span class="nx">apply</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="p">[</span><span class="nx">method</span><span class="p">,</span> <span class="nx">model</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="nx">error</span><span class="p">]);</span>
+  <span class="p">};</span>
+
+  <span class="k">return</span> <span class="nx">ChromeStorage</span><span class="p">;</span>
+<span class="p">}));</span>
+
+</pre></div></td></tr></tbody></table><div id="generated">generated Thu Dec 20 2012 11:21:19 GMT-0800 (PST)  </div><div id="projectname"><a href="./index.html">Backbone.ChromeStorage</a></div></div></body></html>

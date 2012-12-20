@@ -1,0 +1,70 @@
+<!DOCTYPE html><html><head><title>README</title><meta http-equiv="Content-Type" content="text/html" charset="UTF-8"><link rel="stylesheet" media="all" href="./docco.css"></head><body><div id="container"><div id="background"></div><div id="jump_to">Jump To &hellip;<div id="jump_wrapper"><div id="jump_page"><a href="./index.html" class="source"><span class="file_name">README</span></a><a href="./backbone.chromestorage.js.html" class="source "><span class="base_path">. / </span><span class="file_name">backbone.chromestorage.js</span></a></div></div></div><table cellpadding="0" cellspacing="0"><thead><tr><th class="docs"></th><th class="code"></th></tr></thead><tbody><tr id="section"><td class="docs"><h1>Backbone.ChromeStorage
+</h1><p>A chrome.storage API adapter for Backbone.js</p><h3>Version</h3><p>0.0.1</p><h3>Author</h3><p>Alexa Grey<undefined></p><h3>Dependencies </h3><ul><li><b>backbone </b><span>~0.9.2</span></li></ul><p><h3>Stats</h3><pre class="code_stats">
+http://cloc.sourceforge.net v 1.55  T=0.5 s (2.0 files/s, 734.0 lines/s)
+-------------------------------------------------------------------------------
+Language                     files          blank        comment           code
+-------------------------------------------------------------------------------
+Javascript                       1             67             91            209
+-------------------------------------------------------------------------------
+</pre></p></td><td id="content" class="code"><h1>Backbone.ChromeStorage</h1>
+
+<p>A <a href="https://developer.chrome.com/extensions/storage.html" title="chrome.storage documentation">chrome.storage.*</a> adapter for Backbone.js, largely inspired by <a href="https://github.com/jeromegn/Backbone.localStorage">Backbone.localStorage</a> but reworked for use in writing extensions for the Chrome browser.</p>
+
+<p>The asynchronous nature of Chrome's storage API is handled with <a href="http://api.jquery.com/category/deferred-object/" title="$.Deferred documentation">$.Deferred</a> objects wrapped around its methods, which allows for essentially the same flexibility that is provided by AJAX requests, e.g.:</p>
+
+<pre><code>collection.fetch().then(
+    // done callback
+    function() {
+        console.log('do something once collection is fetched');
+    },
+    // fail callback
+    function(dfd, errText, lastError /* from chrome.runtime.lastError */) {
+        console.warn("Problem fetching from chromeStorage '%s'", errText);
+    }
+);
+</code></pre>
+
+<p>Backbone.ChromeStorage supports AMD/RequireJS, but it will work without it.</p>
+
+<h2>Usage</h2>
+
+<p>Usage is much the same as with localStorage, with the addition of
+an extra (optional) argument that specifies which <em>type</em> of storage to use:</p>
+
+<pre><code>var SomeCollection = Backbone.Collection.extend({
+    chromeStorage: new Backbone.ChromeStorage("SomeCollection", "sync");
+    // everything else is the same
+});
+</code></pre>
+
+<p>For storage that will persist across every browser a user has synchronized, use <code>"sync"</code>. For storage that will persist only in the current browser, much like localStorage, use <code>"local"</code>.</p>
+
+<p>If a type is not provided, it will default to <code>"local"</code>. To change the default, use <code>Backbone.ChromeStorage.defaultType</code>.</p>
+
+<p>If a user has disabled Chrome's synchronization features, <code>"sync"</code> will automatically fall back to <code>"local"</code> without issue.</p>
+
+<h2>Caveats</h2>
+
+<h3>zepto.js support</h3>
+
+<p>Backbone.ChromeStorage will work just fine with Zepto instead of jQuery, but as it requires deferred objects, you will need to use something like the excellent <a href="https://github.com/sudhirj/simply-deferred" title="Simply Deferred">simply-deferred</a>.</p>
+
+<h3>Backbone.localStorage</h3>
+
+<p>Because they both modify globals, Backbone.ChromeStorage and Backbone.localStorage will not play nice together. Using the 'local' type for ChromeStorage is effectively the same as localStorage if you wish to mix the two.</p>
+
+<h3>"sync" storage and throttling</h3>
+
+<p>Chrome's rate-limiting and quota restrictions on <code>"sync"</code> storage are presently handled by <code>$.Deferred().reject()</code>, with <code>chrome.runtime.lastError</code> being passed to any fail callbacks as the third argument. A future version will handle this more elegantly.</p>
+
+<h2>License</h2>
+
+<p>Released under MIT license</p>
+
+<p>Copyright (c) 2012 Alexandra Grey</p>
+
+<p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p>
+
+<p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
+
+<p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>  </td></tr></tbody></table><div id="generated">generated Thu Dec 20 2012 11:21:19 GMT-0800 (PST)  </div><div id="projectname"><a href="./index.html">Backbone.ChromeStorage</a></div></div></body></html>
