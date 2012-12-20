@@ -1,0 +1,11 @@
+{
+	"devel": true,
+	"browser": true,
+	"eqnull": true,
+	"laxbreak": true,
+	"laxcomma": true,
+	"es5": true,
+	"predef": [
+		"chrome"
+	]
+}

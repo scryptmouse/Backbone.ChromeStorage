@@ -1,0 +1,17 @@
+{
+  "name": "Backbone.ChromeStorage",
+  "version": "0.0.1",
+  "description": "A chrome.storage API adapter for Backbone.js",
+  "url": "https://github.com/scryptmouse/Backbone.ChromeStorage",
+  "author": {
+    "name": "Alexa Grey",
+    "site": "http://alexa.is"
+  },
+  "dependencies": {
+    "backbone": "~0.9.2"
+  },
+  "devDependencies": {
+    "grunt": "~0.3.17",
+    "grunt-docco-husky": "~0.0.4"
+  }
+}

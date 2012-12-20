@@ -1,0 +1,9 @@
+node_modules
+pids
+logs
+results
+*.pid
+*.gz
+*.log
+docs/*.html
+docs/*.css
