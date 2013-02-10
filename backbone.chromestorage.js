@@ -222,7 +222,7 @@
     },
 
     _destroyed: function(model) {
-      this.records = _.without(this.records, this._idOf(model));
+      this.records = _.without(this.records, model.id);
       this.save();
     },
 
