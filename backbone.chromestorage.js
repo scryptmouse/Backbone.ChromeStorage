@@ -117,7 +117,30 @@
       pipe(this._parseRecords).
       done((function(records) {
         this.records = records;
+        chrome.storage.onChanged.addListener(_update_records.bind(this));
       }).bind(this));
+  }
+
+  function _update_records(changes, type){
+      var records_change = changes[this.name];
+      if(_our_store_records_changed(records_change, type)){
+          _set_records_from_string(records_change.newValue);
+      }
+  }
+
+  function _our_store_records_changed(records_change, type){
+      return 
+          type === this.type && 
+          records_change && 
+          records_change.newValue !== _get_records_string();
+  }
+
+  function _set_records_from_string(records_string){
+      this.records = records_string.split(',');
+  }
+
+  function _get_records_string(){
+    return this.records.join(',');
   }
 
   // `Backbone.ChromeStorage.defaultType` can be overridden globally if desired.
