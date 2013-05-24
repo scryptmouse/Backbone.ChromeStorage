@@ -184,11 +184,11 @@
 
     // ### find
     find: function(model) {
-      return this.store.get(this._wrap(model)).pipe(this._found);
+      return this.store.get(this._wrap(model)).pipe(this._found.bind(this, model));
     },
 
-    _found: function(model) {
-      return JSON.parse(model);
+    _found: function(model, result) {
+      return JSON.parse(result[this._idOf(model)]);
     },
 
     // ### findAll
