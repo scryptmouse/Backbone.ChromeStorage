@@ -117,7 +117,30 @@
       pipe(this._parseRecords).
       done((function(records) {
         this.records = records;
+        chrome.storage.onChanged.addListener(_updateRecords.bind(this));
       }).bind(this));
+  }
+
+  function _updateRecords(changes, type){
+      var records_change = changes[this.name];
+      if(_ourStoreRecordsChanged(records_change, type)){
+          _setRecordsFromString(records_change.newValue);
+      }
+  }
+
+  function _ourStoreRecordsChanged(records_change, type){
+      return 
+          type === this.type && 
+          records_change && 
+          records_change.newValue !== _getRecordsString();
+  }
+
+  function _setRecordsFromString(records_string){
+      this.records = records_string.split(',');
+  }
+
+  function _getRecordsString(){
+    return this.records.join(',');
   }
 
   // `Backbone.ChromeStorage.defaultType` can be overridden globally if desired.
@@ -184,11 +207,11 @@
 
     // ### find
     find: function(model) {
-      return this.store.get(this._wrap(model)).pipe(this._found);
+      return this.store.get(this._wrap(model)).pipe(this._found.bind(this, model));
     },
 
-    _found: function(model) {
-      return JSON.parse(model);
+    _found: function(model, result) {
+      return JSON.parse(result[this._idOf(model)]);
     },
 
     // ### findAll
