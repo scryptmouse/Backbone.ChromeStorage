@@ -117,29 +117,29 @@
       pipe(this._parseRecords).
       done((function(records) {
         this.records = records;
-        chrome.storage.onChanged.addListener(_update_records.bind(this));
+        chrome.storage.onChanged.addListener(_updateRecords.bind(this));
       }).bind(this));
   }
 
-  function _update_records(changes, type){
+  function _updateRecords(changes, type){
       var records_change = changes[this.name];
-      if(_our_store_records_changed(records_change, type)){
-          _set_records_from_string(records_change.newValue);
+      if(_ourStoreRecordsChanged(records_change, type)){
+          _setRecordsFromString(records_change.newValue);
       }
   }
 
-  function _our_store_records_changed(records_change, type){
+  function _ourStoreRecordsChanged(records_change, type){
       return 
           type === this.type && 
           records_change && 
-          records_change.newValue !== _get_records_string();
+          records_change.newValue !== _getRecordsString();
   }
 
-  function _set_records_from_string(records_string){
+  function _setRecordsFromString(records_string){
       this.records = records_string.split(',');
   }
 
-  function _get_records_string(){
+  function _getRecordsString(){
     return this.records.join(',');
   }
 
