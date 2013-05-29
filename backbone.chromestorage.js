@@ -117,31 +117,10 @@
       pipe(this._parseRecords).
       done((function(records) {
         this.records = records;
-        chrome.storage.onChanged.addListener(_updateRecords.bind(this));
+        chrome.storage.onChanged.addListener(this.updateRecords.bind(this));
       }).bind(this));
   }
 
-  function _updateRecords(changes, type){
-      var records_change = changes[this.name];
-      if(_ourStoreRecordsChanged(records_change, type)){
-          _setRecordsFromString(records_change.newValue);
-      }
-  }
-
-  function _ourStoreRecordsChanged(records_change, type){
-      return 
-          type === this.type && 
-          records_change && 
-          records_change.newValue !== _getRecordsString();
-  }
-
-  function _setRecordsFromString(records_string){
-      this.records = records_string.split(',');
-  }
-
-  function _getRecordsString(){
-    return this.records.join(',');
-  }
 
   // `Backbone.ChromeStorage.defaultType` can be overridden globally if desired.
   //
@@ -174,6 +153,30 @@
   }
 
   _(ChromeStorage.prototype).extend({
+    // ## Methods for updating the record string
+    //
+    // ### updateRecords
+    updateRecords: function(changes, type) {
+      var records_change = changes[this.name];
+      if (this._recordsChanged(records_change, type)) {
+        this._setRecordsFromString(records_change.newValue);
+      }
+    },
+
+    _recordsChanged: function(records_change, type) {
+      return type === this.type && 
+              records_change && 
+              records_change.newValue !== this._getRecordsString();
+    },
+
+    _setRecordsFromString: function(records_string) {
+      this.records = records_string.split(',');
+    },
+
+    _getRecordsString: function() {
+      return this.records.join(',');
+    },
+
     // ## CRUD methods
     //
     // ### create
