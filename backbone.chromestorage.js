@@ -158,23 +158,20 @@
     // ### updateRecords
     updateRecords: function(changes, type) {
       var records_change = changes[this.name];
+
       if (this._recordsChanged(records_change, type)) {
-        this._setRecordsFromString(records_change.newValue);
+        this.records = records_change.newValue;
       }
     },
 
+    // *StorageChange* `records_change`
+    // *string* `type` is one of 'local' or 'sync'
     _recordsChanged: function(records_change, type) {
-      return type === this.type && 
-              records_change && 
-              records_change.newValue !== this._getRecordsString();
-    },
-
-    _setRecordsFromString: function(records_string) {
-      this.records = records_string.split(',');
-    },
-
-    _getRecordsString: function() {
-      return this.records.join(',');
+      if (type === this.type && records_change) {
+        return !_.isEqual(records_change.newValue, this.records);
+      } else {
+        return false;
+      }
     },
 
     // ## CRUD methods
@@ -287,7 +284,7 @@
     save: function() {
       var o = {};
 
-      o[this.name] = this.records.join(',');
+      o[this.name] = this.records;
 
       this.store.set(o);
     },
@@ -321,14 +318,22 @@
 
     // ### _parseRecords
     // Takes the object returned from `chrome.storage` with the
-    // collection name as a property name, and a stringified array
-    // of model ids as the property's value. It **split**s the string and
-    // returns the result.
+    // collection name as a property name, and an array of model ids
+    // as the property's value.
+    //
+    // Legacy support for stringified arrays.
+    // It **split**s the string and returns the result.
     _parseRecords: function(records) {
-      if (records && records[this.name] && _.isString(records[this.name]))
-        return records[this.name].split(',');
-      else
+      var record_list = records && records[this.name] ? records[this.name] : null;
+
+      if (_.isArray(record_list)) {
+        return record_list;
+      } else if (typeof record_list === 'string') {
+        console.debug('[Backbone.ChromeStorage (%s / %s)] upgrading from stringified array of ids', this.type, this.name);
+        return record_list.split(',');
+      } else {
         return [];
+      }
     }
   });
 
