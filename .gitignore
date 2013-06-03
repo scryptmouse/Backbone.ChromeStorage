@@ -5,5 +5,5 @@ results
 *.pid
 *.gz
 *.log
-docs/*.html
-docs/*.css
+docs/
+test-extension/src/backbone.chromestorage.js
