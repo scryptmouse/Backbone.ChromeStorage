@@ -1,0 +1,16 @@
+{
+  "name": "Backbone.ChromeStorage Test Extension",
+  "version": "0.1",
+  "description": "Test Environment for Backbone.js Integration",
+  "manifest_version": 2,
+
+  "background": {
+    "page": "test.html"
+  },
+
+  "options_page": "test.html",
+
+  "permissions": [
+    "storage"
+  ]
+}
