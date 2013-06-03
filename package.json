@@ -1,6 +1,6 @@
 {
   "name": "Backbone.ChromeStorage",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A chrome.storage API adapter for Backbone.js",
   "url": "https://github.com/scryptmouse/Backbone.ChromeStorage",
   "author": {
