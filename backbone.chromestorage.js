@@ -152,6 +152,12 @@
     return (_S4()+_S4()+"-"+_S4()+"-"+_S4()+"-"+_S4()+"-"+_S4()+_S4()+_S4());
   }
 
+  // ### unstringify
+  // Gracefully upgrade from stringified models.
+  function unstringify(model) {
+    return typeof model === 'string' ? JSON.parse(model) : model;
+  }
+
   _(ChromeStorage.prototype).extend({
     // ## Methods for updating the record string
     //
@@ -211,7 +217,7 @@
     },
 
     _found: function(model, result) {
-      return JSON.parse(result[this._idOf(model)]);
+      return unstringify(result[this._idOf(model)]);
     },
 
     // ### findAll
@@ -234,7 +240,7 @@
     },
 
     _foundAll: function(models) {
-      return _(models).map(JSON.parse);
+      return _(models).map(unstringify);
     },
 
     // ### destroy
@@ -306,12 +312,14 @@
     },
 
     // ### _wrap
-    // Stringify a model instance into an object that
+    // Encapsulate a model into an object that
     // the storage API wants.
+    //
+    // Accepts a string ID or a model instance.
     _wrap: function(model) {
       var o = {};
 
-      o[this._idOf(model)] = JSON.stringify(model);
+      o[this._idOf(model)] = _.isString(model) ? model : model.toJSON();
 
       return o;
     },
