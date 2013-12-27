@@ -107,7 +107,7 @@
 
   // Public API is essentially the same as Backbone.localStorage.
   function ChromeStorage(name, type) {
-    _.bindAll(this);
+    _.bindAll.apply(_, [this].concat(_.functions(this)));
 
     this.name = name;
     this.type = type || ChromeStorage.defaultType || 'local';
