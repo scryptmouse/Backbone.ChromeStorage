@@ -46,7 +46,7 @@ You must remember to request the storage permission in your manifest.json file.
       ...
     }
 
-See [chromestoragereference] for more details.
+See the [chrome.storage reference guide][chromestoragereference] for more details.
 
 ## Caveats
 
@@ -84,4 +84,4 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 [dfd]: http://api.jquery.com/category/deferred-object/ "$.Deferred documentation"
 [bbls]: https://github.com/jeromegn/Backbone.localStorage
 [simply-deferred]: https://github.com/sudhirj/simply-deferred "Simply Deferred"
-[chromestoragereference]: https://developer.chrome.com/apps/storage.html "chrome.storage reference guide"
+[chromestoragereference]: https://developer.chrome.com/apps/storage.html
