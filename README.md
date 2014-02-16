@@ -33,6 +33,21 @@ If a type is not provided, it will default to `"local"`. To change the default, 
 
 If a user has disabled Chrome's synchronization features, `"sync"` will automatically fall back to `"local"` without issue.
 
+## Notes
+
+You must remember to request the storage permission in your manifest.json file.
+
+    {
+      "name": "My extension",
+      ...
+      "permissions": [
+        "storage"
+      ],
+      ...
+    }
+
+See [chromestoragereference] for more details.
+
 ## Caveats
 
 ### zepto.js support
@@ -69,3 +84,4 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 [dfd]: http://api.jquery.com/category/deferred-object/ "$.Deferred documentation"
 [bbls]: https://github.com/jeromegn/Backbone.localStorage
 [simply-deferred]: https://github.com/sudhirj/simply-deferred "Simply Deferred"
+[chromestoragereference]: https://developer.chrome.com/apps/storage.html "chrome.storage reference guide"
