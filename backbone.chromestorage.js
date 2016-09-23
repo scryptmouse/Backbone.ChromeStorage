@@ -1,9 +1,9 @@
-(function(factory) {
+(function (factory) {
   if (typeof define === 'function' && define.amd)
     define(['jquery', 'underscore', 'backbone'], factory);
   else
     factory(this.$, this._, this.Backbone);
-}(function($, _, Backbone) {
+} (function ($, _, Backbone) {
   'use strict';
 
   // #ChromeStorage.Wrapper
@@ -11,7 +11,7 @@
   // A wrapper around the `chrome.storage.*` API that uses
   // `$.Deferred` objects for greater flexibility.
   function Wrapper(type) {
-    type = ''+type || 'local';
+    type = '' + type || 'local';
 
     if (!chrome.storage[type]) {
       console.warn('Unknown type %s, defaulting to local', type);
@@ -31,7 +31,7 @@
   // with the response, or **reject** it if there was an
   // error.
   function _csResponse(dfd) {
-    return function() {
+    return function () {
       var err = chrome.runtime.lastError;
       if (!err)
         dfd.resolve.apply(dfd, arguments);
@@ -49,7 +49,7 @@
   //
   // For wrapping **clear** and **getBytesInUse**
   function wrapMethod(method) {
-    return function(cb) {
+    return function (cb) {
       var dfd = $.Deferred();
 
       if (typeof cb === 'function')
@@ -65,7 +65,7 @@
   //
   // For wrapping **get**, **set**, and **remove**.
   function wrapAccessor(method) {
-    return function(items, cb) {
+    return function (items, cb) {
       var dfd = $.Deferred();
 
       if (typeof cb === 'function')
@@ -93,7 +93,7 @@
     remove: wrapAccessor('remove'),
 
     // Pick out the relevant properties from the storage API.
-    getQuotaObject: function() {
+    getQuotaObject: function () {
       return _(this.storage).pick(
         'QUOTA_BYTES',
         'QUOTA_BYTES_PER_ITEM',
@@ -115,7 +115,7 @@
 
     this.loaded = this.store.get(this.name).
       pipe(this._parseRecords).
-      done((function(records) {
+      done((function (records) {
         this.records = records;
         chrome.storage.onChanged.addListener(this.updateRecords.bind(this));
       }).bind(this));
@@ -135,7 +135,7 @@
   // provided model from a server, in order to satisfy Backbone.sync
   // methods that expect that.
   function wantsJSON(model) {
-    return function() {
+    return function () {
       return model.toJSON();
     };
   }
@@ -143,13 +143,13 @@
   // ### _S4
   // Generate a random four-digit hex string for **_guid**.
   function _S4() {
-    return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+    return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
   }
 
   // ### _guid
   // Pseudo-GUID generator
   function _guid() {
-    return (_S4()+_S4()+"-"+_S4()+"-"+_S4()+"-"+_S4()+"-"+_S4()+_S4()+_S4());
+    return (_S4() + _S4() + "-" + _S4() + "-" + _S4() + "-" + _S4() + "-" + _S4() + _S4() + _S4());
   }
 
   // ### unstringify
@@ -162,17 +162,17 @@
     // ## Methods for updating the record string
     //
     // ### updateRecords
-    updateRecords: function(changes, type) {
+    updateRecords: function (changes, type) {
       var records_change = changes[this.name];
 
       if (this._recordsChanged(records_change, type)) {
-        this.records = records_change.newValue;
+        this.records = _.isUndefined(records_change.newValue) ? [] : records_change.newValue;
       }
     },
 
     // *StorageChange* `records_change`
     // *string* `type` is one of 'local' or 'sync'
-    _recordsChanged: function(records_change, type) {
+    _recordsChanged: function (records_change, type) {
       if (type === this.type && records_change) {
         return !_.isEqual(records_change.newValue, this.records);
       } else {
@@ -183,27 +183,30 @@
     // ## CRUD methods
     //
     // ### create
-    create: function(model) {
+    create: function (model) {
       if (!model.id) {
-        model.id = _guid();
-        model.set(model.idAttribute, model.id);
+        this._assignId(model);
       }
-
       return this.store.set(this._wrap(model), this._created.bind(this, model)).pipe(wantsJSON(model));
     },
 
-    _created: function(model) {
-      this.records.push(''+model.id);
+    _assignId: function(model) {
+        model.id = _guid();
+        model.set(model.idAttribute, model.id);
+    },
+
+    _created: function (model) {
+      this.records.push('' + model.id);
       this.save();
     },
 
     // ### update
-    update: function(model) {
+    update: function (model) {
       return this.store.set(this._wrap(model), this._updated.bind(this, model)).pipe(wantsJSON(model));
     },
 
-    _updated: function(model) {
-      var id = ''+model.id;
+    _updated: function (model) {
+      var id = '' + model.id;
 
       if (!_(this.records).include(id)) {
         this.records.push(id);
@@ -212,25 +215,25 @@
     },
 
     // ### find
-    find: function(model) {
+    find: function (model) {
       return this.store.get(this._wrap(model)).pipe(this._found.bind(this, model));
     },
 
-    _found: function(model, result) {
+    _found: function (model, result) {
       return unstringify(result[this._idOf(model)]);
     },
 
     // ### findAll
-    findAll: function() {
+    findAll: function () {
       var modelsDfd = $.Deferred()
         /* Bind the callback to use once the models are fetched. */
         , resolveModels = modelsDfd.resolve.bind(modelsDfd)
-      ;
+        ;
 
       // Waits until the model IDs have been initially
       // populated, and then queries the storage for
       // the actual records.
-      $.when(this.loaded).done((function(records) {
+      $.when(this.loaded).done((function (records) {
         var model_ids = this._getRecordIds();
 
         this.store.get(model_ids, resolveModels);
@@ -239,19 +242,55 @@
       return modelsDfd.pipe(this._foundAll);
     },
 
-    _foundAll: function(models) {
+    _foundAll: function (models) {
       return _(models).map(unstringify);
     },
 
     // ### destroy
-    destroy: function(model) {
+    destroy: function (model) {
       return this.store.
         remove(this._idOf(model), this._destroyed.bind(this, model)).
         pipe(wantsJSON(model));
     },
 
-    _destroyed: function(model) {
-      this.records = _.without(this.records, model.id);
+    _destroyed: function (model) {
+      this.records = _.without(this.records, '' + model.id);
+      this.save();
+    },
+
+    destroyAll: function (collection) {
+      return this.store.remove(this._getRecordIds(), this._destroyedAll.bind(this, collection));
+    },
+
+    _destroyedAll: function (collection) {
+      collection.reset();
+      this.records = [];
+      this.save();
+    },
+
+    syncAll: function (collection) {
+      var self = this;
+      var actualIds = this.records;
+      var newIds = [];
+      collection.each(function (model) {
+        if (!model.id) {
+          self._assignId(model);
+        }
+        newIds.push('' + model.id);
+      });
+      var intersectionIds = _.intersection(actualIds, newIds);
+      var idsToRemove = _.difference(actualIds, intersectionIds);
+      return this.store.remove(idsToRemove.map(this._idOf), this._syncedAll.bind(this, intersectionIds)).then(function() {
+        var o = {};
+        collection.each(function (model) {
+          o[this._idOf(model)] = model.toJSON();
+        }.bind(this));
+        return this.store.set(o, this._syncedAll.bind(this, newIds));
+      }.bind(this));
+    },
+
+    _syncedAll: function(newIds) {
+      this.records = newIds;
       this.save();
     },
 
@@ -273,10 +312,10 @@
     //
     // It also queries the API with `getBytesInUse`, adding that
     // to the resultant object under the property name `QUOTA_BYTES_IN_USE`.
-    quota: function() {
+    quota: function () {
       var q = this.store.getQuotaObject();
 
-      return this.store.getBytesInUse().pipe(function(bytes) {
+      return this.store.getBytesInUse().pipe(function (bytes) {
         return _(q).extend({
           QUOTA_BYTES_IN_USE: bytes
         });
@@ -287,7 +326,7 @@
     // Save the current list of model ids into
     // a stringified array with the collection
     // name as key.
-    save: function() {
+    save: function () {
       var o = {};
 
       o[this.name] = this.records;
@@ -298,7 +337,7 @@
     // ### _getRecordIds
     // Get an array of all model IDs to fetch from storage,
     // prefixed with the collection name
-    _getRecordIds: function() {
+    _getRecordIds: function () {
       return this.records.map(this._idOf);
     },
 
@@ -307,8 +346,8 @@
     // the collection name followed by the model's id.
     //
     // Accepts a model instance or the id directly.
-    _idOf: function(model) {
-      return this.name+'-'+(_.isString(model) ? model : model.id);
+    _idOf: function (model) {
+      return this.name + '-' + (_.isString(model) ? model : model.id);
     },
 
     // ### _wrap
@@ -316,7 +355,7 @@
     // the storage API wants.
     //
     // Accepts a string ID or a model instance.
-    _wrap: function(model) {
+    _wrap: function (model) {
       var o = {};
 
       o[this._idOf(model)] = _.isString(model) ? model : model.toJSON();
@@ -331,7 +370,7 @@
     //
     // Legacy support for stringified arrays.
     // It **split**s the string and returns the result.
-    _parseRecords: function(records) {
+    _parseRecords: function (records) {
       var record_list = records && records[this.name] ? records[this.name] : null;
 
       if (_.isArray(record_list)) {
@@ -352,13 +391,13 @@
 
   // Largely the same implementation as in Backbone.localSync, except that
   // `$.Deferred` objects are requisite.
-  Backbone.ChromeStorage.sync = Backbone.chromeSync = function(method, model, options, error) {
+  Backbone.ChromeStorage.sync = Backbone.chromeSync = function (method, model, options, error) {
     var store = model.chromeStorage || model.collection.chromeStorage
       , resp
       , isFn = _.isFunction
-    ;
+      ;
 
-    switch(method) {
+    switch (method) {
       case "read":
         resp = model.id != null ? store.find(model) : store.findAll();
         break;
@@ -372,7 +411,7 @@
         resp = store.destroy(model);
         break;
       default:
-        var err = new Error('Unknown Method: "'+method+'"');
+        var err = new Error('Unknown Method: "' + method + '"');
         resp = $.Deferred();
         resp.reject(resp, err.message, err);
     }
@@ -391,16 +430,29 @@
 
   Backbone.ajaxSync = Backbone.sync;
 
-  Backbone.getSyncMethod = function(model) {
+  Backbone.getSyncMethod = function (model) {
     if (model.chromeStorage || (model.collection && model.collection.chromeStorage))
       return Backbone.ChromeStorage.sync;
     else
       return Backbone.ajaxSync;
   };
 
-  Backbone.sync = function(method, model, options, error) {
+  Backbone.sync = function (method, model, options, error) {
     return Backbone.getSyncMethod(model).apply(this, [method, model, options, error]);
   };
+
+  _.extend(Backbone.Collection.prototype, {
+    destroyAll: function () {
+      if (this.chromeStorage) {
+        return this.chromeStorage.destroyAll(this);
+      }
+    },
+    syncAll: function () {
+      if (this.chromeStorage) {
+        return this.chromeStorage.syncAll(this);
+      }
+    }
+  });
 
   return ChromeStorage;
 }));
