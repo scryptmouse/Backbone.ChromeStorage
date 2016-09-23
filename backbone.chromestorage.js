@@ -166,7 +166,7 @@
       var records_change = changes[this.name];
 
       if (this._recordsChanged(records_change, type)) {
-        this.records = _.isUndefined(records_change.newValue) ? [] : records_change;
+        this.records = _.isUndefined(records_change.newValue) ? [] : records_change.newValue;
       }
     },
 
